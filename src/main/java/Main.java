@@ -1,11 +1,8 @@
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
   public static void main(String[] args) {
@@ -16,7 +13,8 @@ public class Main {
     // Uncomment this block to pass the first stage
     ServerSocket serverSocket = null;
     Socket clientSocket = null;
-    BufferedReader clientInput = null;
+    List<Thread> clientThreads = new ArrayList<Thread>();
+
     int port = 6379;
     try {
       serverSocket = new ServerSocket(port);
@@ -24,20 +22,13 @@ public class Main {
       // ensures that we don't run into 'Address already in use' errors
       serverSocket.setReuseAddress(true);
       // Wait for connection from client.
-      clientSocket = serverSocket.accept();
-
-      BufferedReader br = new BufferedReader(
-          new InputStreamReader(clientSocket.getInputStream()));
       while (true) {
-        String line = br.readLine();
-        if (line == null) {
-          break;
-        }
+        clientSocket = serverSocket.accept();
 
-        if (line.equalsIgnoreCase("PING")) {
-          System.out.println("line: " + line);
-          clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
-        }
+        ClientHandler clientHandler = new ClientHandler(clientSocket);
+        Thread clientThread = new Thread(clientHandler);
+        clientThreads.add(clientThread);
+        clientThread.start();
       }
 
     } catch (IOException e) {
