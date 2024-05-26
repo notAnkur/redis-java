@@ -1,6 +1,11 @@
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
   public static void main(String[] args) {
@@ -11,6 +16,7 @@ public class Main {
     // Uncomment this block to pass the first stage
     ServerSocket serverSocket = null;
     Socket clientSocket = null;
+    BufferedReader clientInput = null;
     int port = 6379;
     try {
       serverSocket = new ServerSocket(port);
@@ -19,7 +25,21 @@ public class Main {
       serverSocket.setReuseAddress(true);
       // Wait for connection from client.
       clientSocket = serverSocket.accept();
-      clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
+
+      BufferedReader br = new BufferedReader(
+          new InputStreamReader(clientSocket.getInputStream()));
+      while (true) {
+        String line = br.readLine();
+        if (line == null) {
+          break;
+        }
+
+        if (line.equalsIgnoreCase("PING")) {
+          System.out.println("line: " + line);
+          clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
+        }
+      }
+
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
     } finally {
