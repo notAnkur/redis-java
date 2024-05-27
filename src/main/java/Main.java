@@ -23,10 +23,17 @@ public class Main {
       serverSocket.setReuseAddress(true);
       // Wait for connection from client.
       while (true) {
+        for (int i = 0; i < clientThreads.size(); i++) {
+          if (!clientThreads.get(i).isAlive()) {
+            clientThreads.remove(i);
+          }
+        }
         clientSocket = serverSocket.accept();
 
         ClientHandler clientHandler = new ClientHandler(clientSocket);
         Thread clientThread = new Thread(clientHandler);
+        System.out.println("Socket created " + clientSocket.toString());
+        System.out.println("Total threads " + clientThreads.size());
         clientThreads.add(clientThread);
         clientThread.start();
       }
