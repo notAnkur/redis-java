@@ -3,13 +3,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ClientHandler implements Runnable {
 
     private Socket clientSocket;
+    ConcurrentHashMap<String, String> map;
 
-    public ClientHandler(Socket socket) {
+    public ClientHandler(Socket socket, ConcurrentHashMap<String, String> map) {
         this.clientSocket = socket;
+        this.map = map;
     }
 
     @Override
@@ -65,13 +68,33 @@ public class ClientHandler implements Runnable {
             System.out.println("arg: " + ss);
         }
         // idx 0 -> command
+        String keyIn = null;
         switch (args[0]) {
             case "PING":
+                // Format -> PING
                 output = "PONG";
                 break;
             case "ECHO":
+                // Format -> ECHO s1 s2 ....
                 String[] modifiedArr = Arrays.copyOfRange(args, 1, args.length);
                 output = String.join(" ", modifiedArr);
+                break;
+            case "GET":
+                // Format -> GET <KEY>
+                keyIn = args[1];
+                String val = map.getOrDefault(keyIn, null);
+                output = val;
+                break;
+            case "SET":
+                // Format -> SET <KEY> <VALUE>....
+                keyIn = args[1];
+                String[] valInArr = Arrays.copyOfRange(args, 2, args.length);
+                if (valInArr.length > 0) {
+                    map.put(keyIn, String.join(" ", valInArr));
+                    output = "OK";
+                } else {
+                    output = "No value";
+                }
             default:
                 String.format("Command %s is not available!", args[0]);
                 break;

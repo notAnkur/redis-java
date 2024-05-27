@@ -3,6 +3,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Main {
   public static void main(String[] args) {
@@ -14,6 +15,7 @@ public class Main {
     ServerSocket serverSocket = null;
     Socket clientSocket = null;
     List<Thread> clientThreads = new ArrayList<Thread>();
+    ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
 
     int port = 6379;
     try {
@@ -30,7 +32,7 @@ public class Main {
         }
         clientSocket = serverSocket.accept();
 
-        ClientHandler clientHandler = new ClientHandler(clientSocket);
+        ClientHandler clientHandler = new ClientHandler(clientSocket, map);
         Thread clientThread = new Thread(clientHandler);
         System.out.println("Socket created " + clientSocket.toString());
         System.out.println("Total threads " + clientThreads.size());
